@@ -10,6 +10,7 @@
       <div class="mapped" style="--left:{{ 100 * (lo-row.start_mm)/row.planned_mm }}%;--span:{{ 100 * (hi-lo)/row.planned_mm }}%" title="{{ lo }}–{{ hi }} mm"></div>
       {% endfor %}
       </div><div class="ticks"><span>{{ row.start_mm }}</span><span>{{ row.end_mm }}</span></div>
+      {% if row.claims %}<p class="claim-line">{% for c in row.claims %}<code>{{ c.run }} {{ c.claimed_mm }} mm</code>{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
     </div>
     {% endfor %}
     <div class="equation">{{ data.planned_mm }} = {{ data.mapped_mm }} + {{ data.missing_mm }} mm <small>计划 = 已映射 + 缺证</small></div>
@@ -22,3 +23,13 @@
     <p>重复覆盖 <b>{{ data.overlap_mm }} mm</b></p>
   </section>
 </div>
+<section class="panel claim-panel">
+  <h3>车次里程认领 · 复位区段先到先得，同轨只计一次</h3>
+  <p class="claim-sum">认可里程合计 <b>{{ data.claims | sum(attribute='claimed_mm') }}</b> mm = 已映射 {{ data.mapped_mm }} mm（重叠复核 {{ data.overlap_mm }} mm 不重复计入）</p>
+  <div class="scroll"><table><thead><tr><th>认领次序</th><th>车次</th><th>认可里程 mm</th><th>实测全长 mm</th><th>重叠未计 mm</th><th>认领依据（链 · 复位区段）</th></tr></thead><tbody>
+  {% for c in data.claims %}<tr>
+    <td>{{ loop.index }}</td><td>{{ c.run }}</td><td>{{ c.claimed_mm }}</td><td>{{ c.raw_mm }}</td><td>{{ c.overlap_mm }}</td>
+    <td>{% for b in c.basis %}<code>{{ b.chain }} {% for lo, hi in b.parts %}{{ lo }}–{{ hi }}{% if not loop.last %}、{% endif %}{% endfor %} · {{ b.claimed_mm }} mm</code>{% if not loop.last %}<br>{% endif %}{% else %}<small>轨段已被先到车次认领，仅记复核贡献</small>{% endfor %}</td>
+  </tr>{% endfor %}
+  </tbody></table></div>
+</section>

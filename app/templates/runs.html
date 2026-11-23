@@ -1,5 +1,19 @@
 <div class="work-grid"><section class="panel"><h3>批次快照</h3>
-{% for run in ledger %}<p><a href="{{ url_for('track_web.screen',section='issue',run=run.run_id,sample=label) }}"><code>{{ run.run_id[:16] }}</code></a> · {{ run.summary.mapped_mm }} mm <small>{{ run.created_at }}</small></p>{% else %}<p>等待首次归档。</p>{% endfor %}
+{% for run in ledger %}<p><a href="{{ url_for('track_web.screen',section='runs',run=run.run_id,sample=label) }}"><code>{{ run.run_id[:16] }}</code></a> · 认可 {{ run.summary.mapped_mm }} mm <small>{{ run.created_at }}</small></p>{% else %}<p>等待首次归档。</p>{% endfor %}
 </section><section class="panel"><h3>归档报文</h3><form id="save-run" data-sample="{{ label }}">
 <label for="csv">自填 CSV</label><textarea id="csv" rows="7" placeholder="留空使用当前样例"></textarea><button>复算并归档</button>
 </form></section></div>
+{% if snapshot %}
+{% set cov = snapshot.stages.coverage %}
+<section class="panel claim-panel">
+  <h3>批次 <code>{{ snapshot.manifest.run_id[:16] }}</code> 当时的认领依据</h3>
+  <p class="claim-sum">规则版本 <code>{{ snapshot.manifest.revision }}</code> · 认可里程合计 <b>{{ cov.claims | sum(attribute='claimed_mm') }}</b> mm = 已映射 {{ cov.mapped_mm }} mm · 重叠复核 {{ cov.overlap_mm }} mm · 缺证 {{ cov.missing_mm }} mm</p>
+  <div class="scroll"><table><thead><tr><th>认领次序</th><th>车次</th><th>认可里程 mm</th><th>实测全长 mm</th><th>重叠未计 mm</th><th>认领依据（链 · 复位区段）</th></tr></thead><tbody>
+  {% for c in cov.claims %}<tr>
+    <td>{{ loop.index }}</td><td>{{ c.run }}</td><td>{{ c.claimed_mm }}</td><td>{{ c.raw_mm }}</td><td>{{ c.overlap_mm }}</td>
+    <td>{% for b in c.basis %}<code>{{ b.chain }} {% for lo, hi in b.parts %}{{ lo }}–{{ hi }}{% if not loop.last %}、{% endif %}{% endfor %} · {{ b.claimed_mm }} mm</code>{% if not loop.last %}<br>{% endif %}{% else %}<small>轨段已被先到车次认领，仅记复核贡献</small>{% endfor %}</td>
+  </tr>{% endfor %}
+  </tbody></table></div>
+  <p><a href="{{ url_for('track_web.screen',section='issue',run=snapshot.manifest.run_id,sample=label) }}">前往签发证据单 →</a></p>
+</section>
+{% endif %}

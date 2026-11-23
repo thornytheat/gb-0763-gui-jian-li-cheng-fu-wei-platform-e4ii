@@ -27,5 +27,6 @@
 | TRAP-14 | 同编号异值 | 后写覆盖 | 同组隔离 | `app/capture/resolve.py` | `tests/test_capture.py::test_conflict_keeps_both_sources` |
 | TRAP-19 | 同基点多等级 | 文件顺序决定结果 | 高等级优先，同等级冲突留缺 | `app/anchors/match.py` | `tests/test_anchors.py::test_best_grade_is_order_independent` |
 | TRAP-23 | 正好落在断链处 | 重复投影或误落 | 时间和测距均左闭右开 | `app/chainage/interpolate.py` | `tests/test_chainage.py::test_cut_belongs_to_next_span` |
+| TRAP-24 | 两趟车部分重叠 | 全记先到车漏复核，或各算全长多报 | 复位区段先到先得认领，同轨只计一次，重叠量单列 | `app/coverage/balance.py` `app/coverage/intervals.py` | `tests/test_coverage.py::test_overlap_split_between_trains` |
 
-夜巡样例计划 600000 mm，已映射 400000 mm，掉线缺证 200000 mm。重复巡检 100000 mm 单列。档案事务不会发布半份快照。
+夜巡样例计划 600000 mm，已映射 400000 mm，掉线缺证 200000 mm。重复巡检 100000 mm 单列。档案事务不会发布半份快照。各车次认可里程之和恒等于已映射长度，认领依据随批次快照归档，重跑同批报文取回原批次而不重复记账。

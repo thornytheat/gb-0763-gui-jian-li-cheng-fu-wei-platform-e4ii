@@ -1,6 +1,6 @@
 from flask import Blueprint, current_app, render_template, request
 
-from app.archive.save import recent
+from app.archive.save import recent, retrieve
 from app.config import REVISION
 from app.errors import TrackError
 from app.inputs import sample
@@ -20,5 +20,12 @@ def screen(section='coverage'):
     label = request.args.get('sample', 'dirty')
     results = inspect(sample(label), section if section not in ('runs', 'issue') else 'coverage')
     ledger = recent(current_app.track_archive)['runs'] if section in ('runs', 'issue') else []
+    snapshot = None
+    run_id = request.args.get('run', '')
+    if section in ('runs', 'issue') and run_id:
+        try:
+            snapshot = retrieve(current_app.track_archive, run_id)
+        except TrackError:
+            snapshot = None
     return render_template('base.html', section=section, nav=SECTIONS, label=label, stages=results,
-                           ledger=ledger, rev=REVISION, run_id=request.args.get('run', ''))
+                           ledger=ledger, rev=REVISION, run_id=run_id, snapshot=snapshot)

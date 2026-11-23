@@ -8,3 +8,9 @@
 .legend span+span::before {background:var(--miss)}
 .equation {border-top:1px solid var(--line);padding-top:12px;color:var(--accent);font:16px var(--mono)}
 .equation small {display:block;margin-top:7px}
+.claim-line {margin:6px 0 0;font-size:13px}
+.claim-line code {color:var(--accent)}
+.claim-panel {margin-top:var(--gap)}
+.claim-sum {color:var(--soft)}
+.claim-sum b {color:var(--accent);font-family:var(--mono)}
+.claim-panel td code {color:var(--soft);font-size:12px}

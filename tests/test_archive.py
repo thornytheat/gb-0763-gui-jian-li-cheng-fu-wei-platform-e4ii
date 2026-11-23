@@ -48,4 +48,23 @@ def test_failed_write_rolls_back(archive_app):
         db.execute("CREATE TRIGGER fail_run BEFORE INSERT ON runs BEGIN SELECT RAISE(ABORT, 'fault'); END")
     with pytest.raises(sqlite3.IntegrityError):
         replay(archive, sample('dirty'))
-    assert recent(archive) == {'runs':[]}
+    assert recent(archive) == {'runs': []}
+
+
+def test_snapshot_keeps_claim_basis(client):
+    run_id = client.post('/api/runs', json={'sample': 'dirty'}).json['run_id']
+    snapshot = client.get('/api/runs/' + run_id).json
+    claims = snapshot['stages']['coverage']['claims']
+    assert claims and sum(item['claimed_mm'] for item in claims) == 400000
+    assert all(item['basis'] or item['claimed_mm'] == 0 for item in claims)
+    page = client.get('/work/runs?run=' + run_id).get_data(as_text=True)
+    assert '当时的认领依据' in page
+
+
+def test_rerun_same_batch_does_not_double_claim(client):
+    first = client.post('/api/runs', json={'sample': 'dirty'}).json['run_id']
+    client.post('/api/runs', json={'sample': 'dirty'})
+    client.post('/api/runs', json={'sample': 'dirty'})
+    assert [item['run_id'] for item in client.get('/api/runs').json['runs']] == [first]
+    claims = client.get('/api/runs/' + first).json['stages']['coverage']['claims']
+    assert sum(item['claimed_mm'] for item in claims) == 400000
